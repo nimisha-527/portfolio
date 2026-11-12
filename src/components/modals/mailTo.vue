@@ -26,11 +26,16 @@ function webComposeUrl(provider: MailProvider) {
   const email = encodeURIComponent(props.email)
   return provider === 'gmail'
     ? `https://mail.google.com/mail/?view=cm&fs=1&to=${email}`
-    : `https://outlook.live.com/mail/0/deeplink/compose?to=${email}`
+    : `https://outlook.office.com/mail/deeplink/compose?to=${email}`
 }
 
 function appComposeUrl(provider: MailProvider) {
   const email = encodeURIComponent(props.email)
+  if (provider === 'gmail' && /android/i.test(navigator.userAgent)) {
+    const fallbackUrl = encodeURIComponent(webComposeUrl(provider))
+    return `intent://#Intent;action=android.intent.action.SENDTO;data=mailto:${email};package=com.google.android.gm;S.browser_fallback_url=${fallbackUrl};end`
+  }
+
   return provider === 'gmail'
     ? `googlegmail:///co?to=${email}`
     : `ms-outlook://compose?to=${email}`
@@ -40,9 +45,10 @@ function providerHref(provider: MailProvider) {
   return isMobileBrowser.value ? appComposeUrl(provider) : webComposeUrl(provider)
 }
 
-function openProvider(provider: MailProvider) {
+function openProvider(provider: MailProvider, event: MouseEvent) {
   const webUrl = webComposeUrl(provider)
   if (!isMobileBrowser.value) {
+    event.preventDefault()
     window.open(webUrl, '_blank', 'noopener,noreferrer')
     return
   }
@@ -62,7 +68,6 @@ function openProvider(provider: MailProvider) {
 
   document.addEventListener('visibilitychange', handleVisibilityChange)
   window.addEventListener('pagehide', cleanup, { once: true })
-  window.open(appComposeUrl(provider), '_self')
 }
 
 async function copyEmail() {
@@ -100,7 +105,7 @@ async function copyEmail() {
           :target="isMobileBrowser ? '_self' : '_blank'"
           rel="noopener noreferrer"
           aria-label="Compose with Gmail"
-          @click.prevent="openProvider('gmail')"
+          @click="openProvider('gmail', $event)"
         >
           <span class="provider-mark gmail-mark" aria-hidden="true">G</span>
           <span>Gmail</span>
@@ -112,7 +117,7 @@ async function copyEmail() {
           :target="isMobileBrowser ? '_self' : '_blank'"
           rel="noopener noreferrer"
           aria-label="Compose with Outlook"
-          @click.prevent="openProvider('outlook')"
+          @click="openProvider('outlook', $event)"
         >
           <span class="provider-mark outlook-mark" aria-hidden="true">O</span>
           <span>Outlook</span>

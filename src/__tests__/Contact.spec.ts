@@ -65,7 +65,7 @@ describe('Contact page', () => {
       'https://mail.google.com/mail/?view=cm&fs=1&to=nimisha%40example.com',
     )
     expect(wrapper.get('a[aria-label="Compose with Outlook"]').attributes('href')).toBe(
-      'https://outlook.live.com/mail/0/deeplink/compose?to=nimisha%40example.com',
+      'https://outlook.office.com/mail/deeplink/compose?to=nimisha%40example.com',
     )
     await wrapper.get('a[aria-label="Compose with Gmail"]').trigger('click')
     expect(open).toHaveBeenCalledWith(
@@ -102,22 +102,44 @@ describe('Contact page', () => {
         'ms-outlook://compose?to=nimisha%40example.com',
       )
 
-      await wrapper.get('a[aria-label="Compose with Gmail"]').trigger('click')
-      expect(open).toHaveBeenNthCalledWith(
-        1,
-        'googlegmail:///co?to=nimisha%40example.com',
-        '_self',
-      )
+      const gmailLink = wrapper.get('a[aria-label="Compose with Gmail"]')
+      gmailLink.element.addEventListener('click', (event) => event.preventDefault(), {
+        once: true,
+      })
+      await gmailLink.trigger('click')
+      expect(open).not.toHaveBeenCalled()
 
       vi.advanceTimersByTime(1500)
-      expect(open).toHaveBeenNthCalledWith(
-        2,
+      expect(open).toHaveBeenCalledWith(
         'https://mail.google.com/mail/?view=cm&fs=1&to=nimisha%40example.com',
         '_self',
       )
     } finally {
       vi.useRealTimers()
       open.mockRestore()
+      if (userAgentDescriptor) {
+        Object.defineProperty(navigator, 'userAgent', userAgentDescriptor)
+      } else {
+        Reflect.deleteProperty(navigator, 'userAgent')
+      }
+    }
+  })
+
+  it('uses the Gmail Android intent with web fallback', async () => {
+    const userAgentDescriptor = Object.getOwnPropertyDescriptor(navigator, 'userAgent')
+    Object.defineProperty(navigator, 'userAgent', {
+      configurable: true,
+      value: 'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/130.0.0.0 Mobile',
+    })
+
+    try {
+      const wrapper = await mountContact('nimisha@example.com')
+
+      await wrapper.get('button.email-link').trigger('click')
+      expect(wrapper.get('a[aria-label="Compose with Gmail"]').attributes('href')).toBe(
+        'intent://#Intent;action=android.intent.action.SENDTO;data=mailto:nimisha%40example.com;package=com.google.android.gm;S.browser_fallback_url=https%3A%2F%2Fmail.google.com%2Fmail%2F%3Fview%3Dcm%26fs%3D1%26to%3Dnimisha%2540example.com;end',
+      )
+    } finally {
       if (userAgentDescriptor) {
         Object.defineProperty(navigator, 'userAgent', userAgentDescriptor)
       } else {
