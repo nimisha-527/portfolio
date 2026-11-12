@@ -50,6 +50,7 @@ describe('Contact page', () => {
   })
 
   it('opens provider choices, copies the email, and closes from cancel', async () => {
+    const open = vi.spyOn(window, 'open').mockImplementation(() => null)
     const writeText = vi.fn().mockResolvedValue(undefined)
     Object.defineProperty(navigator, 'clipboard', {
       configurable: true,
@@ -66,6 +67,12 @@ describe('Contact page', () => {
     expect(wrapper.get('a[aria-label="Compose with Outlook"]').attributes('href')).toBe(
       'https://outlook.live.com/mail/0/deeplink/compose?to=nimisha%40example.com',
     )
+    await wrapper.get('a[aria-label="Compose with Gmail"]').trigger('click')
+    expect(open).toHaveBeenCalledWith(
+      'https://mail.google.com/mail/?view=cm&fs=1&to=nimisha%40example.com',
+      '_blank',
+      'noopener,noreferrer',
+    )
 
     await wrapper.get('button.copy-email').trigger('click')
     expect(writeText).toHaveBeenCalledWith('nimisha@example.com')
@@ -73,6 +80,50 @@ describe('Contact page', () => {
 
     await wrapper.get('button.cancel-email').trigger('click')
     expect(wrapper.find('[role="dialog"]').exists()).toBe(false)
+  })
+
+  it('opens mobile mail apps and falls back to web compose when an app is unavailable', async () => {
+    const userAgentDescriptor = Object.getOwnPropertyDescriptor(navigator, 'userAgent')
+    Object.defineProperty(navigator, 'userAgent', {
+      configurable: true,
+      value: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)',
+    })
+    const open = vi.spyOn(window, 'open').mockImplementation(() => null)
+    open.mockClear()
+    vi.useFakeTimers()
+    try {
+      const wrapper = await mountContact('nimisha@example.com')
+
+      await wrapper.get('button.email-link').trigger('click')
+      expect(wrapper.get('a[aria-label="Compose with Gmail"]').attributes('href')).toBe(
+        'googlegmail:///co?to=nimisha%40example.com',
+      )
+      expect(wrapper.get('a[aria-label="Compose with Outlook"]').attributes('href')).toBe(
+        'ms-outlook://compose?to=nimisha%40example.com',
+      )
+
+      await wrapper.get('a[aria-label="Compose with Gmail"]').trigger('click')
+      expect(open).toHaveBeenNthCalledWith(
+        1,
+        'googlegmail:///co?to=nimisha%40example.com',
+        '_self',
+      )
+
+      vi.advanceTimersByTime(1500)
+      expect(open).toHaveBeenNthCalledWith(
+        2,
+        'https://mail.google.com/mail/?view=cm&fs=1&to=nimisha%40example.com',
+        '_self',
+      )
+    } finally {
+      vi.useRealTimers()
+      open.mockRestore()
+      if (userAgentDescriptor) {
+        Object.defineProperty(navigator, 'userAgent', userAgentDescriptor)
+      } else {
+        Reflect.deleteProperty(navigator, 'userAgent')
+      }
+    }
   })
 
   it('does not expose the email template token when no address is configured', async () => {
