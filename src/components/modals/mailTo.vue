@@ -33,7 +33,7 @@ function appComposeUrl(provider: MailProvider) {
   const email = encodeURIComponent(props.email)
   if (provider === 'gmail' && /android/i.test(navigator.userAgent)) {
     const fallbackUrl = encodeURIComponent(webComposeUrl(provider))
-    return `intent://#Intent;action=android.intent.action.SENDTO;data=mailto:${email};package=com.google.android.gm;S.browser_fallback_url=${fallbackUrl};end`
+    return `intent:${email}#Intent;scheme=mailto;action=android.intent.action.SENDTO;package=com.google.android.gm;S.browser_fallback_url=${fallbackUrl};end`
   }
 
   return provider === 'gmail'
