@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 defineOptions({ name: 'MailToModal' })
 
@@ -12,6 +12,58 @@ const emit = defineEmits<{
 }>()
 
 const copyStatus = ref('')
+const isMobileBrowser = computed(() => {
+  const userAgent = navigator.userAgent
+  return (
+    /android|iphone|ipad|ipod/i.test(userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+  )
+})
+
+type MailProvider = 'gmail' | 'outlook'
+
+function webComposeUrl(provider: MailProvider) {
+  const email = encodeURIComponent(props.email)
+  return provider === 'gmail'
+    ? `https://mail.google.com/mail/?view=cm&fs=1&to=${email}`
+    : `https://outlook.live.com/mail/0/deeplink/compose?to=${email}`
+}
+
+function appComposeUrl(provider: MailProvider) {
+  const email = encodeURIComponent(props.email)
+  return provider === 'gmail'
+    ? `googlegmail:///co?to=${email}`
+    : `ms-outlook://compose?to=${email}`
+}
+
+function providerHref(provider: MailProvider) {
+  return isMobileBrowser.value ? appComposeUrl(provider) : webComposeUrl(provider)
+}
+
+function openProvider(provider: MailProvider) {
+  const webUrl = webComposeUrl(provider)
+  if (!isMobileBrowser.value) {
+    window.open(webUrl, '_blank', 'noopener,noreferrer')
+    return
+  }
+
+  const cleanup = () => {
+    window.clearTimeout(fallbackTimer)
+    document.removeEventListener('visibilitychange', handleVisibilityChange)
+    window.removeEventListener('pagehide', cleanup)
+  }
+  const handleVisibilityChange = () => {
+    if (document.visibilityState === 'hidden') cleanup()
+  }
+  const fallbackTimer = window.setTimeout(() => {
+    cleanup()
+    if (document.visibilityState === 'visible') window.open(webUrl, '_self')
+  }, 1500)
+
+  document.addEventListener('visibilitychange', handleVisibilityChange)
+  window.addEventListener('pagehide', cleanup, { once: true })
+  window.open(appComposeUrl(provider), '_self')
+}
 
 async function copyEmail() {
   try {
@@ -44,10 +96,11 @@ async function copyEmail() {
       <div class="provider-options">
         <a
           class="provider-option"
-          :href="`https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(email)}`"
-          target="_blank"
+          :href="providerHref('gmail')"
+          :target="isMobileBrowser ? '_self' : '_blank'"
           rel="noopener noreferrer"
           aria-label="Compose with Gmail"
+          @click.prevent="openProvider('gmail')"
         >
           <span class="provider-mark gmail-mark" aria-hidden="true">G</span>
           <span>Gmail</span>
@@ -55,10 +108,11 @@ async function copyEmail() {
         </a>
         <a
           class="provider-option"
-          :href="`https://outlook.live.com/mail/0/deeplink/compose?to=${encodeURIComponent(email)}`"
-          target="_blank"
+          :href="providerHref('outlook')"
+          :target="isMobileBrowser ? '_self' : '_blank'"
           rel="noopener noreferrer"
           aria-label="Compose with Outlook"
+          @click.prevent="openProvider('outlook')"
         >
           <span class="provider-mark outlook-mark" aria-hidden="true">O</span>
           <span>Outlook</span>
