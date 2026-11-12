@@ -137,7 +137,7 @@ describe('Contact page', () => {
 
       await wrapper.get('button.email-link').trigger('click')
       expect(wrapper.get('a[aria-label="Compose with Gmail"]').attributes('href')).toBe(
-        'intent://#Intent;action=android.intent.action.SENDTO;data=mailto:nimisha%40example.com;package=com.google.android.gm;S.browser_fallback_url=https%3A%2F%2Fmail.google.com%2Fmail%2F%3Fview%3Dcm%26fs%3D1%26to%3Dnimisha%2540example.com;end',
+        'intent:nimisha%40example.com#Intent;scheme=mailto;action=android.intent.action.SENDTO;package=com.google.android.gm;S.browser_fallback_url=https%3A%2F%2Fmail.google.com%2Fmail%2F%3Fview%3Dcm%26fs%3D1%26to%3Dnimisha%2540example.com;end',
       )
     } finally {
       if (userAgentDescriptor) {
