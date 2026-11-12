@@ -19,4 +19,4 @@ Run `npm run build` to type-check and create a production build, or `npm run lin
 
 Navigating to a new route scrolls to the top; browser history navigation restores its saved scroll position.
 
-On mobile browsers, Gmail and Outlook contact options open the installed mail app when available and fall back to web compose otherwise.
+On mobile browsers, Gmail and Outlook use provider-specific app links with web-compose fallbacks. Desktop provider links open Gmail or Outlook web compose.
