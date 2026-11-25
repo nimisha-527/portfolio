@@ -12,17 +12,20 @@ interface Project {
   href: string
   githubHref?: string
   previewVideo?: string
+  previewImage?: string
+  defaultImage: boolean
 }
 
 const projects: Project[] = [
   {
-    title: 'Reading Bliss',
+    title: 'Fresher Friend',
     description:
-      "A personal book library where users can add, browse and manage their favourite books effortlessly. If you've ever lost track of book recommendations or struggled with scattered notes, this platform is for you!",
-    technologies: ['EJS', 'JavaScript', 'Express.js', 'MongoDB'],
-    href: 'https://reading-bliss.onrender.com/',
-    githubHref: 'https://github.com/nimisha-527/the-reading-bliss',
-    previewVideo: readingBlissPreview,
+      'Helps students and freshers find genuine entry-level jobs with clear pay, skills, work mode, location, and role type—plus search, filter, sort, pagination, and saving. The server fetches job posts, uses Gemini AI to classify roles and spot fresher eligibility, and saves clean, structured listings in MongoDB for fast, easy browsing.',
+    technologies: ['Google Gemini API', 'Typescript', 'Vue 3', 'Express.js', 'MongoDB'],
+    href: 'https://fresher-friend-client.onrender.com/',
+    githubHref: 'https://github.com/nimisha-527/fresher-friend',
+    previewImage: '../../assets/fresher-friend.png',
+    defaultImage: false,
   },
   {
     title: 'create-webapp-kit',
@@ -31,7 +34,18 @@ const projects: Project[] = [
     technologies: ['CLI', 'Vue.js', 'React.js', 'Express.js', 'MongoDB'],
     href: 'https://www.npmjs.com/package/create-webapp-kit',
     githubHref: 'https://github.com/nimisha-527/create-webapp-kit',
+    defaultImage: true,
   },
+  {
+    title: 'Reading Bliss',
+    description:
+      "A personal book library where users can add, browse and manage their favourite books effortlessly. If you've ever lost track of book recommendations or struggled with scattered notes, this platform is for you!",
+    technologies: ['EJS', 'JavaScript', 'Express.js', 'MongoDB'],
+    href: 'https://reading-bliss.onrender.com/',
+    githubHref: 'https://github.com/nimisha-527/the-reading-bliss',
+    previewVideo: readingBlissPreview,
+    defaultImage: false,
+  }
 ]
 </script>
 
@@ -67,7 +81,13 @@ const projects: Project[] = [
               preload="metadata"
               :aria-label="`${project.title} site preview`"
             ></video>
-            <template v-else>
+            <img
+              v-if="project.previewImage"
+              :src="project.previewImage"
+              :alt="`${project.title} site preview`"
+              class="preview-image"
+            />
+            <template v-if="project.defaultImage">
               <span class="preview-window" aria-hidden="true">
                 <span class="window-dots"><i></i><i></i><i></i></span>
                 <span class="window-content">
@@ -307,6 +327,13 @@ const projects: Project[] = [
   position: absolute;
   inset: 0;
   object-fit: cover;
+}
+
+.preview-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
 }
 
 .project-info {
