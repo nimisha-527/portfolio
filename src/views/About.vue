@@ -53,7 +53,7 @@ function contentValue(value: string | undefined) {
             <section>
               <span class="approach-number">03</span>
               <h2>Tools</h2>
-              <p>Git, GitHub, VS Code, and Chrome DevTools.</p>
+              <p>Google Gemini API, Git, GitHub, VS Code, and Chrome DevTools.</p>
             </section>
           </div>
         </div>
