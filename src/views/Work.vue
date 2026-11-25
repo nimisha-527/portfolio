@@ -2,6 +2,7 @@
 import Nav from '../components/Nav.vue'
 import PortfolioCard from '../components/Card.vue'
 import readingBlissPreview from '../../assets/Reading-Bliss.mp4'
+import fresherFriendImg from '../../assets/fresher-friend.png'
 
 defineOptions({ name: 'WorkPage' })
 
@@ -24,7 +25,7 @@ const projects: Project[] = [
     technologies: ['Google Gemini API', 'Typescript', 'Vue 3', 'Express.js', 'MongoDB'],
     href: 'https://fresher-friend-client.onrender.com/',
     githubHref: 'https://github.com/nimisha-527/fresher-friend',
-    previewImage: '../../assets/fresher-friend.png',
+    previewImage: fresherFriendImg,
     defaultImage: false,
   },
   {
